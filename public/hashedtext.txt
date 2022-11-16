@@ -1,0 +1,815 @@
+   // function Record(){
+    //   if(RecFlag==false){
+    //     RecFlag=true;
+    //     console.log('recording started');
+    //     StartRec();
+    //     recording.innerText='Stop recording'
+    //   }
+    //   else{
+    //     RecFlag=false;
+    //     stopRec();
+    //     console.log('recording stopped');
+    //     recording.innerText='Record'
+    //   }
+    // }
+
+    // async function StartRec(){
+    //   let MyStream= await recordScreen();
+    //   let mimeType='video/webm';
+    //   MediaRecorder = createRecorder(MyStream, mimeType);
+    //   let node = document.createElement('p');
+    //   node.textContent='Started recording';
+    //   document.body.appendChild(node);
+    // }
+
+    // async function recordScreen(){
+    //   return await navigator.mediaDevices.getDisplayMedia({
+    //     audio:true,
+    //     video: {mediaSource: "screen"}
+    //   });
+    // }
+    // function stopRec(){
+    //   mediaRecorder.stop();
+    //   let node =createElement("p");
+    //   node.textContent = "Stopped recording";
+    //   document.body.appendChild(node);
+    // }
+
+    // function createRecorder(stream, mimeType){
+    //   let recordedChunks=[];
+    //   const mediaRecorder = new MediaRecorder(stream);
+
+    //   mediaRecorder.ondataavailable=function(e){
+    //     if (e.data.size>0){
+    //       recordedChunks.push(e.data);
+    //     }
+    //   };
+    //   mediaRecorder.onstop =function(){
+    //     saveFile(recordedChunks);
+    //     recordedChunks=[];
+    //   };
+    //   mediaRecorder.start(200);
+    //   return mediaRecorder;
+
+    // }
+
+    // function saveFile(recordedChunks) {
+    //   const blob =new Blob(recordedChunks,{
+    //     type:'video/webm'
+    //   });
+    //   let filemane=window.prompt('Enter File Name'),
+    //   downloadLink=document.createElement('a');
+    //   downloadLink.href= URL.createObjectURL(blob);
+    //   downloadLink.download=`${filemane}.webm`;
+
+    //   document.body.appendChild(downloadLink);
+    //   downloadLink.click();
+    //   URL.revokeObjectURL(blob);
+    //   document.body.removeChild(downloadLink);
+    // }
+
+ if(Qno==1){
+    userButtons.innerHTML=`<button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+    <button class="btn btn-primary" id="next" onclick="next()">Next Question</button>
+    <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endText()">End Test</button>`;
+    adminButtons.innerHTML=`<button class="btn btn-primary m-1" id="next" onclick="next()">Change to Next Question</button>`
+   }else if(Qno==questions.length){
+     userButtons.innerHTML=`<button class="btn btn-primary" id="priv" onclick="priv()">Previous Question</button>
+     <button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+     <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endText()">End Test</button>`
+     adminButtons.innerHTML=`<button class="btn btn-primary m-1" id="priv" onclick="priv()">Change to Previous Question</button>
+         
+     <button class="btn btn-primary m-1" id="next" onclick="next()">Change to Next Question</button>`
+   } else {
+     userButtons.innerHTML=`<button class="btn btn-primary" id="priv" onclick="priv()">Previous Question</button>
+     <button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+     <button class="btn btn-primary" id="next" onclick="next()">Next Question</button>
+     <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endText()">End Test</button>`
+     adminButtons.innerHTML=`<button class="btn btn-primary m-1" id="priv" onclick="priv()">Change to Previous Question</button>
+         
+     <button class="btn btn-primary m-1" id="next" onclick="next()">Change to Next Question</button>`
+   }
+
+  let endtext=`<h2>The interview has ended:</h2>
+  <h4>Results:</h4>`;
+  for(let j=0;j<questions.length;j++){
+    endtext+=`<div class="my-2"><h5>Q.${j+1} Question Title: ${questions[j].Title}</h5>
+    <h6>Question: ${questions[j].Question}</h6>
+    <p>Expected Answer: ${questions[j].Answer}</p>
+    <h6>Submitted Answer: ${questions[j].userAns}</h6></div>`  }
+    document.getElementById('QnA').innerHTML=endtext;
+    document.getElementById('controlPanel').innerHTML=endtext;
+
+   p-4 
+
+   #answers
+   #last and privious question removal on 
+   #end text == result getDisplay
+   #recruit or recruiter.
+
+const socket = io('/');
+const videoGrid = document.getElementById('video-grid');
+let recording = document.getElementById('record');
+let RecFlag = false;
+let disptext = document.getElementById('user-info');
+let msg = document.getElementById('message');
+let yourName = document.getElementById('name');
+let chat = "";
+let questionButtons;
+let userQuestion;
+let recQ;
+let recA;
+let AddQT;
+let AddQ;
+let AddQA;
+let answer;
+let currentQ = 1;
+
+
+let questions = [{
+  Qno: 1,
+  Title: "Planets",
+  Question: "How many planets in the solar system?",
+  Answer: "8",
+  userAns: ""
+},
+{
+  Qno: 2,
+  Title: "Toes",
+  Question: "How many toes do humans have?",
+  Answer: "10",
+  userAns: ""
+},
+{
+  Qno: 3,
+  Title: "Lions",
+  Question: "How do lions hunt their prey",
+  Answer: "They chase the prey and then kill it.",
+  userAns: ""
+}
+]
+
+
+
+const myPeer = new Peer(undefined, {
+  host: '/',
+  port: '3001'
+})
+
+function firstorlast() {
+  if (currentQ == 1) {
+    userButtons.innerHTML = `<button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+    <button class="btn btn-primary" id="next" onclick="next()">Next Question</button>
+    <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endTest()">End Test</button>`;
+    adminButtons.innerHTML = `<button class="btn btn-primary m-1" id="nextbtn" onclick="next()">Change to Next Question</button>
+    <button class="btn btn-primary align-self-lg-end"  onclick="endTest()">End the Interview?</button>`
+  } else if (currentQ == questions.length) {
+    userButtons.innerHTML = `<button class="btn btn-primary" id="priv" onclick="priv()">Previous Question</button>
+     <button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+     <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endTest()">End Test</button>`
+    adminButtons.innerHTML = `<button class="btn btn-primary m-1" id="privbtn" onclick="priv()">Change to Previous Question</button>
+     <button class="btn btn-primary align-self-lg-end"  onclick="endTest()">End the Interview?</button>`
+  } else {
+    userButtons.innerHTML = `<button class="btn btn-primary" id="priv" onclick="priv()">Previous Question</button>
+     <button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+     <button class="btn btn-primary" id="next" onclick="next()">Next Question</button>
+     <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endTest()">End Test</button>`
+    adminButtons.innerHTML = `<button class="btn btn-primary m-1" id="privbtn" onclick="priv()">Change to Previous Question</button>
+         
+     <button class="btn btn-primary m-1" id="nextbtn" onclick="next()">Change to Next Question</button>
+     <button class="btn btn-primary align-self-lg-end"  onclick="endTest()">End the Interview?</button>`
+  }
+}
+
+let displaytext = '';
+const myVideo = document.createElement('video')
+myVideo.muted = true
+const peers = {}
+let myVideoStream;
+
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(stream => {
+  myVideoStream = stream;
+  addVideoStream(myVideo, stream)
+  myVideoStream.getAudioTracks()[0].enabled = false;
+
+  myPeer.on('call', call => {
+    call.answer(stream)
+    const video = document.createElement('video')
+    call.on('stream', userVideoStream => {
+      addVideoStream(video, userVideoStream)
+    })
+  })
+
+  socket.on('user-connected', userId => {
+    connectToNewUser(userId, stream);
+
+  })
+})
+
+socket.on('user-disconnected', userId => {
+  if (peers[userId]) peers[userId].close()
+})
+
+myPeer.on('open', id => {
+  socket.emit('join-room', ROOM_ID, id)
+})
+
+
+
+function connectToNewUser(userId, stream) {
+  const call = myPeer.call(userId, stream)
+  const video = document.createElement('video')
+  call.on('stream', userVideoStream => {
+    addVideoStream(video, userVideoStream)
+  })
+  call.on('close', () => {
+    video.remove()
+  })
+
+  peers[userId] = call
+}
+
+function addVideoStream(video, stream) {
+  video.srcObject = stream;
+
+  video.addEventListener('loadedmetadata', () => {
+    video.play()
+  })
+
+  videoGrid.append(video);
+}
+
+
+
+function sendmessage() {
+  if (msg.value.length !== 0) {
+    console.log(msg.value)
+    content = {
+      message: msg.value,
+      Name: yourName.value
+    }
+    console.log(content.Name);
+    socket.emit('message', content);
+    msg.value = '';
+  }
+
+}
+
+socket.on('createMessage', content => {
+  const d = new Date();
+
+  chat += `<div>${content.Name} <h5> ${content.message}</h5>  <p>${d.toString()}</p></div>`;
+  disptext.innerHTML = chat;
+  chat += '<br>';
+  console.log(content.message)
+})
+
+
+
+
+let mediaRecorder;
+
+recording.addEventListener('click', function () {
+  if (RecFlag == false) {
+    RecFlag = true;
+    recording.innerText = 'Stop recording'
+    start();
+  }
+  else {
+    RecFlag = false;
+    recording.innerText = 'Record'
+    stop();
+  }
+})
+
+async function start() {
+  let stream = await recordScreen();
+  let mimeType = 'video/webm';
+  mediaRecorder = createRecorder(stream, mimeType);
+
+}
+
+function stop() {
+  mediaRecorder.stop();
+
+}
+async function recordScreen() {
+  return await navigator.mediaDevices.getDisplayMedia({
+    audio: true,
+    video: { mediaSource: "screen" }
+  });
+}
+
+function createRecorder(stream, mimeType) {
+  // the stream data is stored in this array
+  let recordedChunks = [];
+
+  const mediaRecorder = new MediaRecorder(stream);
+
+  mediaRecorder.ondataavailable = function (e) {
+    if (e.data.size > 0) {
+      recordedChunks.push(e.data);
+    }
+  };
+  mediaRecorder.onstop = function () {
+    saveFile(recordedChunks);
+    recordedChunks = [];
+  };
+  mediaRecorder.start(200); // For every 200ms the stream data will be stored in a separate chunk.
+  return mediaRecorder;
+}
+
+function saveFile(recordedChunks) {
+  recording.innerText = 'Record';
+  const blob = new Blob(recordedChunks, {
+    type: 'video/webm'
+  });
+  let filename = window.prompt('Enter file name'),
+    downloadLink = document.createElement('a');
+  downloadLink.href = URL.createObjectURL(blob);
+  downloadLink.download = `${filename}.webm`;
+
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  URL.revokeObjectURL(blob); // clear from memory
+  document.body.removeChild(downloadLink);
+
+}
+
+const muteUnmute = () => {
+  const enabled = myVideoStream.getAudioTracks()[0].enabled;
+  if (enabled) {
+    myVideoStream.getAudioTracks()[0].enabled = false;
+    document.getElementById("mute-unmute").innerText = "Unmute";
+  } else {
+    document.getElementById("mute-unmute").innerText = "Mute";
+    myVideoStream.getAudioTracks()[0].enabled = true;
+  }
+}
+
+const playStop = () => {
+  let enabled = myVideoStream.getVideoTracks()[0].enabled;
+  if (enabled) {
+    myVideoStream.getVideoTracks()[0].enabled = false;
+    document.getElementById("playStop").innerText = 'Start-Video';
+  }
+  else {
+    myVideoStream.getVideoTracks()[0].enabled = true;
+    document.getElementById("playStop").innerText = 'Stop-Video';
+  }
+}
+
+function displayQuestion(Qno) {
+  socket.emit('dispQ', Qno);
+}
+
+socket.on('displayedQ', Qno => {
+  let obj = questions.find(data => data.Qno === Qno);
+  html3 = `Q${obj.Qno}. ${obj.Title} \nQuestion: ${obj.Question}`;
+  currentQ = Qno;
+  userQuestion.innerText = html3;
+  recQ.innerText = html3;
+  recA.innerHTML = 'Expected Answer: ' + obj.Answer;
+  document.getElementById('submittedAns').innerText = 'Submitted Ans: ' + questions[currentQ - 1].userAns;
+  document.getElementById('userSubmittedAns').innerText = 'Submitted Ans: ' + questions[currentQ - 1].userAns;
+  firstorlast();
+
+
+
+})
+
+function priv() {
+  if (currentQ != 1) {
+    displayQuestion(currentQ - 1)
+  }
+}
+function next() {
+  if (currentQ != questions.length) {
+    displayQuestion(currentQ + 1)
+  }
+}
+function saveAns() {
+  if (answer.value.length != 0) {
+    socket.emit('answerSubmitted', answer.value)
+
+  }
+}
+socket.on('submittedAns', ans => {
+  questions[currentQ - 1].userAns = ans;
+  console.log(questions)
+  document.getElementById('submittedAns').innerText = 'Submitted Ans: ' + questions[currentQ - 1].userAns;
+  document.getElementById('userSubmittedAns').innerText = 'Submitted Ans: ' + questions[currentQ - 1].userAns;
+  answer.value = '';
+})
+
+
+function addQ() {
+  if (AddQ.value.length !== 0 || AddQT.value.length !== 0) {
+    let newQ = {
+      Qno: questions.length + 1,
+      Title: AddQT.value,
+      Question: AddQ.value,
+      Answer: AddQA.value,
+      userAns: ""
+    }
+
+    socket.emit('addNewQ', newQ);
+    AddQ.value = '';
+    AddQA.value = '';
+    AddQT.value = '';
+
+  }
+}
+
+socket.on('newQ', newQ => {
+  questions.push(newQ);
+
+  let html4 = '';
+  for (let i = 0; i < questions.length; i++) {
+    html4 += `<button class="btn btn-primary m-1" id="Qno${questions[i].Qno}" onclick="displayQuestion(${questions[i].Qno})">${questions[i].Title}</button>`;
+  }
+  questionButtons.innerHTML = html4;
+  firstorlast();
+
+})
+
+function endTest() {
+  socket.emit('testEnd', questions);
+
+
+}
+
+socket.on('endedTest', x => {
+
+  let endtext = `<h2>The interview has ended:</h2>
+  <h4>Results:</h4>`;
+  for (let j = 0; j < x.length; j++) {
+    endtext += `<div class="my-2"><h5>Q.${j + 1} Question Title: ${x[j].Title}</h5>
+    <h6>Question: ${x[j].Question}</h6>
+    <p>Expected Answer: ${x[j].Answer}</p>
+    <h6>Submitted Answer: ${x[j].userAns}</h6></div>`
+  }
+  document.getElementById('QnA').innerHTML = endtext;
+  document.getElementById('controlPanel').innerHTML = endtext;
+
+})
+
+function iAmInterviewer() {
+  document.getElementById('wholebar').innerHTML = `<div class="row p-4 my-2 border " id="controlPanel">
+  <div class="row p-3 ">
+    <div class="col">
+      <p>Add New Question</p>
+      <input class="h-100 w-100 my-1" id="addQuestionTitle" placeholder="Question Title">
+      <textarea class="h-100 w-100" id="addQuestion" placeholder="Question"></textarea>
+      <textarea class="h-100 w-100" id="addQuestionAnswer" placeholder="Expected Answer"></textarea>
+      <button class="btn btn-primary" id="addQ" onclick="addQ()">Add Question</button>
+    </div>
+    <div class="col h-100 border">
+      <p>Display Another Question?</p>
+      <div class="col" id="questionButtons">
+        <button class="btn btn-primary" id="Qno1" onclick="displayQuestion()">Question Title</button>
+      </div>
+    </div>
+  </div>
+  <div class="row p-4 border">
+    <div class="col">
+      <h3 id="currentQuestion">Current Question</h3>
+      <p id="currentAnswer">answer</p>
+      <p id="userSubmittedAns">Submitted Ans:</p>
+    </div>
+    <div class="col" id="adminButtons">
+      <button class="btn btn-primary m-1" id="privbtn" onclick="priv()">Change to Previous Question</button>
+
+      <button class="btn btn-primary m-1" id="nextbtn" onclick="next()">Change to Next Question</button>
+      <button class="btn btn-primary align-self-lg-end" onclick="endTest()">End the Interview?</button>
+    </div>
+  </div>
+</div>`;
+  questionButtons = document.getElementById('questionButtons');
+  
+  recQ = document.getElementById('currentQuestion');
+  recA = document.getElementById('currentAnswer');
+  AddQT = document.getElementById('addQuestionTitle');
+  AddQ = document.getElementById('addQuestion');
+  AddQA = document.getElementById('addQuestionAnswer');
+  userQuestion = document.getElementById('question');
+
+  let html3 = `Q${questions[currentQ - 1].Qno}. ${questions[currentQ - 1].Title} \nQuestion: ${questions[currentQ - 1].Question}`;
+  console.log(currentQ)
+  userQuestion.innerText = html3;
+  recQ.innerText = html3;
+  recA.innerHTML = 'Expected Answer' + questions[currentQ - 1].Answer;
+  firstorlast();
+
+  let html2 = '';
+  for (let i = 0; i < questions.length; i++) {
+    html2 += `<button class="btn btn-primary m-1" id="Qno${questions[i].Qno}" onclick="displayQuestion(${questions[i].Qno})">${questions[i].Title}</button>`;
+  }
+  questionButtons.innerHTML = html2;
+}
+
+
+function iAmRecruit(){
+  
+  socket.emit('recruitJoining',false);
+  document.getElementById('wholebar').innerHTML = `<div class="row my-2 p-4 border" id="QnA">
+  <div class="col">
+    <h4 id='question'>Questions apper here</h4>
+    <h5 id='submittedAns'></h5>
+    <textarea class="w-100 h-100" id="answer"></textarea>
+    <div id="userButtons">
+      <button class="btn btn-primary" id="priv" onclick="priv()">Previous Question</button>
+      <button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+      <button class="btn btn-primary" id="next" onclick="next()">Next Question</button>
+      <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endTest()">End Test</button>
+    </div>
+  </div>
+</div>
+</div>
+<div class="row"> `
+userQuestion = document.getElementById('question');
+let html3 = `Q${questions[currentQ - 1].Qno}. ${questions[currentQ - 1].Title} \nQuestion: ${questions[currentQ - 1].Question}`;
+  console.log(currentQ)
+  userQuestion.innerText = html3;
+}
+
+socket.on('joinedRecruit', Rin => {
+  console.log(Rin);
+  
+})
+socket.on('alreadyIn',Rin=>{
+  console.log(Rin)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script>
+    const ROOM_ID = "<%= roomId %>"
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"
+    integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
+    integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13"
+    crossorigin="anonymous"></script>
+  <script src="jquery-3.6.0.min.js"></script>
+  <script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="script.js" defer></script>
+
+  <title>Document</title>
+  <style>
+    #video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 300px);
+      grid-auto-rows: 300px;
+    }
+
+    .fixed-row-bottom {
+      position: relative;
+      bottom: 0;
+    }
+
+    .col {
+      width: fit-content;
+      height: fit-content;
+    }
+
+    .fixed {
+      position: relative;
+      width: 25%;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+
+<body style="color:white; background-color: rgb(48, 48, 48);">
+  <div class="container  ">
+    <div class="row">
+      <h1>The Demo Application</h1>
+    </div>
+    <div class="row">
+      <div class="col overflow-auto"
+        style="flex-direction: column;  flex-grow:1; background-color:rgb(36, 36, 36); height: 65%; ">
+        <div style="justify-content: center;">
+
+          <div id="video-grid"></div>
+        </div>
+      </div>
+      <div class="col col-3 collapse fixed" id="collapseExample">
+        <div class="overflow-auto" style="height:40vw">
+          <p id="user-info">chat Here</p>
+        </div>
+
+        <textarea id="message" type="text"></textarea>
+        <button class="btn btn-primary" onclick="sendmessage()">enter </button>
+
+
+      </div>
+    </div>
+    <div id="wholebar">
+      <h1>What Are You?</h1>
+      <button class="btn btn-danger m-1" onclick="iAmInterviewer()">Interviewer</button>
+      <button class="btn btn-success m-1" onclick="iAmRecruit()">Recruit</button>
+    </div>
+    <!-- <div class="row p-4 my-2 border " id="controlPanel">
+      <div class="row p-3 ">
+        <div class="col">
+          <p>Add New Question</p>
+          <input class="h-100 w-100 my-1" id="addQuestionTitle" placeholder="Question Title">
+          <textarea class="h-100 w-100" id="addQuestion" placeholder="Question"></textarea>
+          <textarea class="h-100 w-100" id="addQuestionAnswer" placeholder="Expected Answer"></textarea>
+          <button class="btn btn-primary" id="addQ" onclick="addQ()">Add Question</button>
+        </div>
+        <div class="col h-100 border">
+          <p>Display Another Question?</p>
+          <div class="col" id="questionButtons">
+            <button class="btn btn-primary" id="Qno1" onclick="displayQuestion()">Question Title</button>
+          </div>
+        </div>
+      </div>
+      <div class="row p-4 border">
+        <div class="col">
+          <h3 id="currentQuestion">Current Question</h3>
+          <p id="currentAnswer">answer</p>
+          <p id="userSubmittedAns">Submitted Ans:</p>
+        </div>
+        <div class="col" id="adminButtons">
+          <button class="btn btn-primary m-1" id="privbtn" onclick="priv()">Change to Previous Question</button>
+
+          <button class="btn btn-primary m-1" id="nextbtn" onclick="next()">Change to Next Question</button>
+          <button class="btn btn-primary align-self-lg-end" onclick="endTest()">End the Interview?</button>
+        </div>
+      </div>
+    </div> -->
+
+
+    
+    <!-- <div class="row my-2 p-4 border" id="QnA">
+      <div class="col">
+        <h4 id='question'>Questions apper here</h4>
+        <h5 id='submittedAns'></h5>
+        <textarea class="w-100 h-100" id="answer"></textarea>
+        <div id="userButtons">
+          <button class="btn btn-primary" id="priv" onclick="priv()">Previous Question</button>
+          <button class="btn btn-primary" id="saveAns" onclick="saveAns()">Submit?</button>
+          <button class="btn btn-primary" id="next" onclick="next()">Next Question</button>
+          <button class="btn btn-primary align-self-lg-end" id="endTest" onclick="endTest()">End Test</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row"> -->
+
+  </div>
+  <div class="row fixed-row-bottom justify-content-center">
+    <div class="col col-1 py-4 my-4">
+      <button class="btn btn-primary" type="button" id="mute-unmute" onclick="muteUnmute()">Unmute</button>
+    </div>
+    <div class="col col-1 py-4 my-4">
+      <button class="btn btn-primary" type="button" id="playStop" onclick="playStop()">Stop-Video</button>
+    </div>
+    <div class="col col-1 py-4 my-4">
+      <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample"
+        aria-expanded="false" aria-controls="collapseExample">
+        chat
+      </button>
+    </div>
+    <div class="col col-1 py-4 my-4">
+      <button class="btn btn-primary" type="button" id="record">Record</button>
+    </div>
+    <div class="col col-1 py-4 my-4">
+      <button class="btn btn-primary" type="button">share</button>
+
+    </div>
+    <div class="col col-1 py-4 my-4">
+
+      <input style="width: 50;" placeholder="enter name" type="text" id="name">
+    </div>
+  </div>
+  </div>
+
+
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const express = require('express')
+const app = express()
+const server = require('http').Server(app)
+const io = require('socket.io')(server)
+const { v4: uuidV4 } = require('uuid')
+let recIn= false;
+app.set('view engine', 'ejs')
+app.use(express.static('public'))
+
+app.get('/', (req, res) => {
+  res.redirect(`/${uuidV4()}`)
+})
+
+app.get('/:room', (req, res) => {
+  res.render('room', { roomId: req.params.room })
+})
+
+io.on('connection', socket => {
+  
+  socket.on('join-room', (roomId, userId) => {
+    socket.join(roomId)
+    socket.broadcast.to(roomId).emit('user-connected', userId)
+    
+
+    socket.on('message',message=>{
+      io.to(roomId).emit('createMessage',message)
+    })
+    socket.on('dispQ',Qno=>{
+      io.to(roomId).emit('displayedQ',Qno)
+    })
+    socket.on('addNewQ',obj=>{
+      io.to(roomId).emit('newQ',obj)
+    })
+    socket.on('answerSubmitted',ans=>{
+      io.to(roomId).emit('submittedAns',ans)
+    })
+    socket.on('recruitJoining',recruitin=>{
+      if (recIn==false){
+        recIn=true;
+      io.to(roomId).emit('joinedRecruit',recruitin)
+    }else{
+      recruitin=true;
+      io.to(roomId).emit('alreadyIn',recruitin)
+    }
+    })
+    socket.on('testEnd',x=>{
+      console.log('test ended');
+      io.to(roomId).emit('endedTest',x)
+    })
+
+    socket.on('disconnect', () => {
+      socket.broadcast.to(roomId).emit('user-disconnected', userId)
+    })
+  })
+})
+
+server.listen(3000)
+
+
+let recbtn=document.getElementById('recruit');
+recbtn.style.visibility="";
+let intbtn=document.getElementById('interviewer');
+intbtn.style.visibility="";
